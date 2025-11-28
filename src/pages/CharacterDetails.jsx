@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { rickAndMortyService } from '../services/rickAndMortyService';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchItemById } from '../features/items/itemsSlice';
 import Spinner from '../components/Spinner';
 import ErrorBox from '../components/ErrorBox';
 import './CharacterDetails.css';
@@ -8,25 +9,19 @@ import './CharacterDetails.css';
 const CharacterDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [character, setCharacter] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
+  
+  const { selectedItem, loadingItem, errorItem } = useSelector((state) => state.items);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    rickAndMortyService.getCharacterById(id)
-      .then(data => setCharacter(data))
-      .catch(err => {
-        setError('Character not found or an error occurred.');
-        console.error(err);
-      })
-      .finally(() => setLoading(false));
-  }, [id]);
+    if (id) {
+      dispatch(fetchItemById(id));
+    }
+  }, [dispatch, id]);
 
-  if (loading) return <Spinner />;
-  if (error) return <ErrorBox message={error} />;
-  if (!character) return <ErrorBox message="Character not found." />;
+  if (loadingItem) return <Spinner />;
+  if (errorItem) return <ErrorBox message={errorItem} />;
+  if (!selectedItem) return <ErrorBox message="Character not found." />;
 
   return (
     <div className="details-container">
@@ -34,17 +29,17 @@ const CharacterDetails = () => {
         &larr; Back
       </button>
       <div className="details-card">
-        <img src={character.image} alt={character.name} className="details-image" />
+        <img src={selectedItem.image} alt={selectedItem.name} className="details-image" />
         <div className="details-info">
-          <h1>{character.name}</h1>
+          <h1>{selectedItem.name}</h1>
           <ul>
-            <li><strong>Status:</strong> {character.status}</li>
-            <li><strong>Species:</strong> {character.species}</li>
-            <li><strong>Type:</strong> {character.type || 'N/A'}</li>
-            <li><strong>Gender:</strong> {character.gender}</li>
-            <li><strong>Origin:</strong> {character.origin.name}</li>
-            <li><strong>Last Known Location:</strong> {character.location.name}</li>
-            <li><strong>Number of Episodes:</strong> {character.episode.length}</li>
+            <li><strong>Status:</strong> {selectedItem.status}</li>
+            <li><strong>Species:</strong> {selectedItem.species}</li>
+            <li><strong>Type:</strong> {selectedItem.type || 'N/A'}</li>
+            <li><strong>Gender:</strong> {selectedItem.gender}</li>
+            <li><strong>Origin:</strong> {selectedItem.origin.name}</li>
+            <li><strong>Last Known Location:</strong> {selectedItem.location.name}</li>
+            <li><strong>Number of Episodes:</strong> {selectedItem.episode.length}</li>
           </ul>
         </div>
       </div>
